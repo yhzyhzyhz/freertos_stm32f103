@@ -78,9 +78,15 @@ static void prvBlinkTask( void *pvParameters )
     while(1)
     {
     	xLastWakeTime = xTaskGetTickCount();
-        STM_EVAL_LEDToggle(LED2);
+        // STM_EVAL_LEDToggle(LED2);
+    	Debug("old blink task\n");
         vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS( 250 ) );
     }
+}
+
+void timerCallback(TimerHandle_t xTimer)
+{
+	STM_EVAL_LEDToggle(LED2);
 }
 
 
@@ -89,8 +95,15 @@ int main(void)
     /* Set up the clocks and memory interface. */
     prvSetupHardware();
 
+    TimerHandle_t timer1 = xTimerCreate("timer", pdMS_TO_TICKS(500), pdTRUE, (void*)0, timerCallback);
+
     xTaskCreate( prvTestTask, "test", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 1 ), NULL );
     xTaskCreate( prvBlinkTask, "Blink", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 2 ), NULL);
+
+    if(timer1 != NULL)
+    {
+    	 xTimerStart(timer1 , 0);
+    }
 
     /* Start the scheduler. */
     vTaskStartScheduler();
