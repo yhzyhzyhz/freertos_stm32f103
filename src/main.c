@@ -33,11 +33,14 @@
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+#include "semphr.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+SemaphoreHandle_t ButtonSemaphore;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 void Debug(const char* str)
@@ -60,55 +63,77 @@ static void prvSetupHardware( void )
     SysTick_CLKSourceConfig( SysTick_CLKSource_HCLK );
 
     STM_EVAL_LEDInit(LED2);
+    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
     Debug("INFO: HW initialized\n");
 }
 
-static void prvTestTask( void *pvParameters )
+static void TestTask( void *pvParameters )
 {
-    while(1)
+	for (;;)
     {
-        Debug("this is task test\n");
+        Debug("---this is task test\n");
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
 
-static void prvBlinkTask( void *pvParameters )
+static void BlinkTask( void *pvParameters )
 {
 	TickType_t xLastWakeTime;
-    while(1)
+	for (;;)
     {
     	xLastWakeTime = xTaskGetTickCount();
         // STM_EVAL_LEDToggle(LED2);
-    	Debug("old blink task\n");
+    	Debug("---old blink task\n");
         vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS( 250 ) );
     }
 }
 
-void timerCallback(TimerHandle_t xTimer)
+static void TimerCallback(TimerHandle_t xTimer)
 {
 	STM_EVAL_LEDToggle(LED2);
 }
 
+static void ButtonInterruptTask(void *pvParameters)
+{
+	for(;;)
+	{
+		if(xSemaphoreTake(ButtonSemaphore, pdMS_TO_TICKS(1000)) == pdPASS)
+		{
+			Debug("Button pressed\n");
+		}
+		else
+		{
+			Debug("Button time out\n");
+		}
+	}
+}
 
 int main(void)
 {
     /* Set up the clocks and memory interface. */
     prvSetupHardware();
 
-    TimerHandle_t timer1 = xTimerCreate("timer", pdMS_TO_TICKS(500), pdTRUE, (void*)0, timerCallback);
+    ButtonSemaphore = xSemaphoreCreateBinary();
 
-    xTaskCreate( prvTestTask, "test", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 1 ), NULL );
-    xTaskCreate( prvBlinkTask, "Blink", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 2 ), NULL);
+    TimerHandle_t timer1 = xTimerCreate("timer", pdMS_TO_TICKS(500), pdTRUE, (void*)0, TimerCallback);
+
+    xTaskCreate( TestTask, "test", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 1 ), NULL );
+    xTaskCreate( BlinkTask, "Blink", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 2 ), NULL);
 
     if(timer1 != NULL)
     {
     	 xTimerStart(timer1 , 0);
     }
 
+    if (ButtonSemaphore != NULL)
+    {
+    	xTaskCreate(ButtonInterruptTask, "button", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 3 ), NULL);
+    }
+
     /* Start the scheduler. */
     vTaskStartScheduler();
 
-    while(1);
+    for (;;);
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )

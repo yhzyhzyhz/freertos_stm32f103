@@ -29,15 +29,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_it.h"
+#include "stm32f1xx_nucleo.h"
 
-/** @addtogroup IO_Toggle
-    * @{
-    */
+#include "FreeRTOS.h"
+#include "semphr.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+extern SemaphoreHandle_t ButtonSemaphore;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -125,7 +126,16 @@ void DebugMon_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f10x_md.s).                                            */
 /******************************************************************************/
-
+void EXTI15_10_IRQHandler(void)
+{
+	if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET))
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		xSemaphoreGiveFromISR(ButtonSemaphore, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+		EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+	}
+}
 
 /**
     * @brief  This function handles PPP interrupt request.

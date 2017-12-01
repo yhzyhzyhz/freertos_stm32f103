@@ -46,6 +46,9 @@ void BusFault_Handler(void);
 void UsageFault_Handler(void);
 void DebugMon_Handler(void);
 
+void EXTI15_10_IRQHandler(void);
+
+
 #ifdef __cplusplus
 }
 #endif
