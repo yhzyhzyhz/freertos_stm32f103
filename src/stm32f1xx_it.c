@@ -128,13 +128,13 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 void EXTI15_10_IRQHandler(void)
 {
-	if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET))
-	{
-		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		xSemaphoreGiveFromISR(ButtonSemaphore, &xHigherPriorityTaskWoken);
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-		EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
-	}
+    if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET))
+    {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(ButtonSemaphore, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+        EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+    }
 }
 
 /**

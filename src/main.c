@@ -52,9 +52,6 @@ void Debug(const char* str)
     }
 }
 
-/*
- * Configure the hardware for the demo.
- */
 static void prvSetupHardware( void )
 {
     NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
@@ -69,7 +66,7 @@ static void prvSetupHardware( void )
 
 static void TestTask( void *pvParameters )
 {
-	for (;;)
+    for (;;)
     {
         Debug("---this is task test\n");
         vTaskDelay(pdMS_TO_TICKS(200));
@@ -78,34 +75,34 @@ static void TestTask( void *pvParameters )
 
 static void BlinkTask( void *pvParameters )
 {
-	TickType_t xLastWakeTime;
-	for (;;)
+    TickType_t xLastWakeTime;
+    for (;;)
     {
-    	xLastWakeTime = xTaskGetTickCount();
+        xLastWakeTime = xTaskGetTickCount();
         // STM_EVAL_LEDToggle(LED2);
-    	Debug("---old blink task\n");
+        Debug("---old blink task\n");
         vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS( 250 ) );
     }
 }
 
 static void TimerCallback(TimerHandle_t xTimer)
 {
-	STM_EVAL_LEDToggle(LED2);
+    STM_EVAL_LEDToggle(LED2);
 }
 
 static void ButtonInterruptTask(void *pvParameters)
 {
-	for(;;)
-	{
-		if(xSemaphoreTake(ButtonSemaphore, pdMS_TO_TICKS(1000)) == pdPASS)
-		{
-			Debug("Button pressed\n");
-		}
-		else
-		{
-			Debug("Button time out\n");
-		}
-	}
+    for(;;)
+    {
+        if(xSemaphoreTake(ButtonSemaphore, pdMS_TO_TICKS(1000)) == pdPASS)
+        {
+            Debug("Button pressed\n");
+        }
+        else
+        {
+            Debug("Button time out\n");
+        }
+    }
 }
 
 int main(void)
@@ -122,12 +119,12 @@ int main(void)
 
     if(timer1 != NULL)
     {
-    	 xTimerStart(timer1 , 0);
+         xTimerStart(timer1 , 0);
     }
 
     if (ButtonSemaphore != NULL)
     {
-    	xTaskCreate(ButtonInterruptTask, "button", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 3 ), NULL);
+        xTaskCreate(ButtonInterruptTask, "button", configMINIMAL_STACK_SIZE, NULL, ( tskIDLE_PRIORITY + 3 ), NULL);
     }
 
     /* Start the scheduler. */
