@@ -54,10 +54,25 @@ void Debug(const char* str)
 
 static void prvSetupHardware( void )
 {
+	// required by FreeRTOS
     NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
 
-    /* Configure HCLK clock as SysTick clock source. */
-    SysTick_CLKSourceConfig( SysTick_CLKSource_HCLK );
+    /*
+     * RCC setup
+     *
+     * HSE = 8MHz
+     * PLL = HES*9 = 72MHz
+     * SYSCLK = PLL = 72MHz
+     * HCLK = SYSCLK = 72MHz
+     * PCLK1 = HCLK/2 = 36MHz
+     * PCLK2 = HCLK = 72MHz
+     * ADCCLK = PCLK2/6 = 12MHz
+     */
+    RCC_ClocksTypeDef RCC_Clocks;
+    RCC_ADCCLKConfig(RCC_PCLK2_Div6);
+    /* SysTick end of count event each 1ms */
+    RCC_GetClocksFreq(&RCC_Clocks);
+    SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
 
     STM_EVAL_LEDInit(LED2);
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
